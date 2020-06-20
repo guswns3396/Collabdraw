@@ -11,7 +11,7 @@ socket.on('connect', function() {
 	console.log(socket.id);
 });
 
-socket.on('receive-update', function(data) {
+socket.on('broadcast-board', function(data) {
 	console.log(data);
 });
 

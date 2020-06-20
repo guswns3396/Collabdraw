@@ -25,7 +25,7 @@ server = Server(HEIGHT,WIDTH)
 @socketio.on('connect')
 def on_connect():
     print("connected to websocket")
-    emit('receive-update', server.board)
+    emit('broadcast-board', server.board)
 
 @socketio.on('disconnect')
 def on_disconnect():
@@ -39,7 +39,7 @@ def handle_stroke(json):
         x = pixel[0]
         y = pixel[1]
         server.board[y][x] = 1
-    emit('receive-update', server.board)
+    emit('broadcast-board', server.board)
 
 if __name__ == "__main__":
     socketio.run(app, port=PORT, debug=True)
