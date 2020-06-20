@@ -15,11 +15,13 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 class Server:
     def __init__(self, height, width):
         self.board = []
+        # initialize empty board
         for i in range(0,height):
             row = []
             for j in range(0,width):
                 row.append(0)
             self.board.append(row)
+# instantiate server class for board state
 server = Server(HEIGHT,WIDTH)
 
 @socketio.on('connect')
@@ -35,10 +37,12 @@ def on_disconnect():
 def handle_stroke(json):
     print(type(json))
     print("received json: " + str(json))
+    # process stroke & update board
     for pixel in json:
         x = pixel[0]
         y = pixel[1]
         server.board[y][x] = 1
+    # broadcast board
     emit('broadcast-board', server.board)
 
 if __name__ == "__main__":
