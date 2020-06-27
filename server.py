@@ -1,3 +1,4 @@
+import threading
 from flask import Flask
 from flask_socketio import SocketIO, emit
 
@@ -14,19 +15,15 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 # server class
 class Server:
     def __init__(self, height, width):
-        self.board = []
-        # initialize empty board
-        for i in range(0,height):
-            row = []
-            for j in range(0,width):
-                row.append(0)
-            self.board.append(row)
+        self.board = [[0]*width]*height
+        self.lock = threading.Lock()
 # instantiate server class for board state
 server = Server(HEIGHT,WIDTH)
 
 @socketio.on('connect')
 def on_connect():
     print("connected to websocket")
+    # broadcast board upon initial connect
     emit('broadcast-board', server.board)
 
 @socketio.on('disconnect')
@@ -34,14 +31,17 @@ def on_disconnect():
     print("disconnected from websocket")
 
 @socketio.on('send-stroke')
-def handle_stroke(json):
-    print(type(json))
-    print("received json: " + str(json))
+def handle_stroke(boardJSON):
+    # strokeJSON -> list
+    print("received json: " + str(boardJSON))
+    # lock board
+    server.lock.acquire()
     # process stroke & update board
-    for pixel in json:
-        x = pixel[0]
-        y = pixel[1]
-        server.board[y][x] = 1
+    for pixel in boardJSON:
+        # process the whole board (not just stroke)
+        pass
+    # unlock board
+    server.lock.release()
     # broadcast board
     emit('broadcast-board', server.board)
 
