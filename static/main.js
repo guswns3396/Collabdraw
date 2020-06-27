@@ -12,7 +12,6 @@ socket.on('connect', function () {
 	console.log(socket.id);
 });
 
-
 socket.on('broadcast-board', function (imagedata) {
 	console.log(imagedata);
 	ctx.putImageData(imageData, 0, 0);
