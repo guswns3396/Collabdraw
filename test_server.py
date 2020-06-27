@@ -4,14 +4,16 @@ import io
 import server
 
 class TestSocketIO(unittest.TestCase):
-    def test_connect_emitsBoardState(self):
-        client = server.socketio.test_client(server.app)
-        HEIGHT = 500
-        WIDTH = 500
+    def test_connect_canvas_emitsBoard(self):
+        pass
 
-        received_data = client.get_received()
+    def test_connect_printsConnectionMessage(self):
+        expectedOutput = "connected to websocket\n"
 
-        self.assertEqual(received_data[0]['args'][0],[[0]*WIDTH]*HEIGHT)
+        with patch('sys.stdout', new=io.StringIO()) as myOutput:
+            client = server.socketio.test_client(server.app)
+
+            self.assertEqual(myOutput.getvalue(), expectedOutput)
 
     def test_disconnect_printsDisconnectionMessage(self):
         client = server.socketio.test_client(server.app)
@@ -21,6 +23,15 @@ class TestSocketIO(unittest.TestCase):
             client.disconnect()
 
             self.assertEqual(myOutput.getvalue(), expectedOutput)
+
+    def test_handle_stroke_receivesSnapshot(self):
+        pass
+
+    def test_handle_stroke_updatesBoard(self):
+        pass
+
+    def test_handle_stroke_emitsBoard(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
