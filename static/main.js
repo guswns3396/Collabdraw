@@ -2,17 +2,20 @@
 const canvas = document.querySelector("#canvas");
 const ctx = canvas.getContext("2d");
 
-canvas.height = window.innerHeight;
-canvas.width = window.innerWidth;
+// TODO(hyunbumy): Re-adjust the board size once the initial board state is returned by the server.
+canvas.height = 500;
+canvas.width = 500;
 
 // Socket.io
 var socket = io('http://localhost:8080')
-socket.on('connect', function() {
+socket.on('connect', function () {
 	console.log(socket.id);
 });
 
-socket.on('broadcast-board', function(data) {
-	console.log(data);
+
+socket.on('broadcast-board', function (imagedata) {
+	console.log(imagedata);
+	ctx.putImageData(imageData, 0, 0);
 });
 
 // detecting drawing action
@@ -30,11 +33,9 @@ function endPos() {
 	ctx.beginPath();
 
 	// send info using websocket
-	console.log(stroke);
-	socket.emit('send-stroke', stroke);
-	
-	// reset stroke
-	stroke = [];
+	const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	console.log(snapshot);
+	socket.emit('send-stroke', snapshot);
 }
 function draw(e) {
 	if (!painting) {
@@ -47,7 +48,6 @@ function draw(e) {
 	ctx.stroke();
 	ctx.beginPath();
 	ctx.moveTo(e.clientX, e.clientY);
-	stroke.push([e.clientX, e.clientY]);
 }
 canvas.addEventListener("mousedown", startPos);
 canvas.addEventListener("mouseup", endPos);
