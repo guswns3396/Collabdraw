@@ -4,8 +4,8 @@ from flask_socketio import SocketIO, emit
 
 # constants
 PORT = 8080
-HEIGHT = 690
-WIDTH = 1280
+HEIGHT = 500
+WIDTH = 500
 
 # create Flask object
 app = Flask(__name__)
@@ -20,11 +20,14 @@ class Server:
 # instantiate server class for board state
 server = Server(HEIGHT,WIDTH)
 
+@app.route('/canvas')
+def connect():
+    # broadcast board upon initial connect at /canvas endpoint
+    emit('broadcast-board', server.board)
+
 @socketio.on('connect')
 def on_connect():
     print("connected to websocket")
-    # broadcast board upon initial connect
-    emit('broadcast-board', server.board)
 
 @socketio.on('disconnect')
 def on_disconnect():
