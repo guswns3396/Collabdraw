@@ -28,11 +28,6 @@ imagedata = {
 }
 server = Server(imagedata)
 
-@app.route('/canvas')
-def connect():
-    # broadcast board upon initial connect at /canvas endpoint
-    emit('broadcast-board', server.board)
-
 @socketio.on('connect')
 def on_connect():
     print("connected to websocket")
@@ -40,20 +35,6 @@ def on_connect():
 @socketio.on('disconnect')
 def on_disconnect():
     print("disconnected from websocket")
-
-@socketio.on('send-stroke')
-def handle_stroke(snapshot):
-    # snapshot -> JSON of imagedata
-    print("received json: " + str(snapshot))
-    # lock board
-    server.lock.acquire()
-    # update board
-    server.updateBoard(snapshot)
-    # unlock board
-    server.lock.release()
-    # broadcast board
-    # TODO: send board back as imagedata (perhaps implement server function?)
-    emit('broadcast-board', server.board)
 
 if __name__ == "__main__":
     socketio.run(app, port=PORT, debug=True)
