@@ -1,6 +1,7 @@
 import threading
 from flask import Flask
 from flask_socketio import SocketIO, emit
+from canvas_board import CanvasBoard
 
 # constants
 PORT = 8080
@@ -14,11 +15,18 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 
 # server class
 class Server:
-    def __init__(self, height, width):
-        self.board = [[0]*width]*height
+    def __init__(self, imagedata):
+        self.board = CanvasBoard(imagedata)
         self.lock = threading.Lock()
+    def updateBoard(self,imagedata):
+        self.board = CanvasBoard(imagedata)
 # instantiate server class for board state
-server = Server(HEIGHT,WIDTH)
+imagedata = {
+    'width': WIDTH,
+    'height': HEIGHT,
+    'data': [0 for i in range(4 * WIDTH * HEIGHT)]
+}
+server = Server(imagedata)
 
 @app.route('/canvas')
 def connect():
@@ -34,18 +42,17 @@ def on_disconnect():
     print("disconnected from websocket")
 
 @socketio.on('send-stroke')
-def handle_stroke(boardJSON):
-    # strokeJSON -> list
-    print("received json: " + str(boardJSON))
+def handle_stroke(snapshot):
+    # snapshot -> JSON of imagedata
+    print("received json: " + str(snapshot))
     # lock board
     server.lock.acquire()
-    # process stroke & update board
-    for pixel in boardJSON:
-        # process the whole board (not just stroke)
-        pass
+    # update board
+    server.updateBoard(snapshot)
     # unlock board
     server.lock.release()
     # broadcast board
+    # TODO: send board back as imagedata (perhaps implement server function?)
     emit('broadcast-board', server.board)
 
 if __name__ == "__main__":
