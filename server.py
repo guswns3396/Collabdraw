@@ -28,6 +28,11 @@ imagedata = {
 }
 server = Server(imagedata)
 
+@app.route('/canvas')
+def connect_canvas():
+    # broadcast board upon initial connect at /canvas endpoint
+    emit('broadcast-board', server.board)
+
 @socketio.on('connect')
 def on_connect():
     print("connected to websocket")
