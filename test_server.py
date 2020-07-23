@@ -32,8 +32,5 @@ class TestSocketIO(unittest.TestCase):
         server_output = received_data[0]['args'][0]
         self.assertEqual(server_expected,server_output)
 
-
-
-
 if __name__ == '__main__':
     unittest.main()
