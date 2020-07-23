@@ -28,7 +28,7 @@ imagedata = {
 }
 server = Server(imagedata)
 
-@app.route('/canvas')
+@socketio.on('connect', namespace='/canvas')
 def connect_canvas():
     # broadcast board upon initial connect at /canvas endpoint
     emit('broadcast-board', server.board)
