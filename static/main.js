@@ -19,7 +19,6 @@ socket.on('broadcast-board', function (imagedata) {
 
 // detecting drawing action
 let painting = false;
-let stroke = [];
 function startPos(e) {
 	painting = true;
 	// fix not drawing when clicking
