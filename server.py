@@ -1,4 +1,5 @@
 import threading
+import json
 from flask import Flask
 from flask_socketio import SocketIO, emit
 from canvas_board import CanvasBoard, CanvasBoardEncoder
@@ -18,8 +19,10 @@ class Server:
     def __init__(self, imagedata):
         self.board = CanvasBoard(imagedata)
         self.lock = threading.Lock()
-    def updateBoard(self,imagedata):
-        self.board = CanvasBoard(imagedata)
+    def updateBoard(self, diff_as_dict):
+        numPixels = len(diff_as_dict['coord'])
+        for i in range(numPixels):
+            self.board.data[diff_as_dict['coord'][i]] = diff_as_dict['val'][i]
 # instantiate server class for board state
 imagedata = {
     'width': WIDTH,
@@ -42,6 +45,11 @@ def on_connect():
 @socketio.on('disconnect')
 def on_disconnect():
     print("disconnected from websocket")
+
+@socketio.on('send-stroke', namespace="/canvas")
+def handle_send_stroke(diff):
+    # diff -> dict
+    server.updateBoard(diff)
 
 if __name__ == "__main__":
     socketio.run(app, port=PORT, debug=True)
