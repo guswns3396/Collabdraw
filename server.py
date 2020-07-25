@@ -18,10 +18,10 @@ class Server:
     def __init__(self, imagedata):
         self.board = CanvasBoard(imagedata)
         self.lock = threading.Lock()
-    def updateBoard(self, diff_as_dict):
-        numPixels = len(diff_as_dict['coord'])
-        for i in range(numPixels):
-            self.board.data[diff_as_dict['coord'][i]] = diff_as_dict['val'][i]
+    def updateBoard(self, diff: dict):
+        self.lock.acquire()
+        self.board.updateBoard(diff['coord'], diff['val'])
+        self.lock.release()
 # instantiate server class for board state
 imagedata = {
     'width': WIDTH,
