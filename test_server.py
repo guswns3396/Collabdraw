@@ -24,13 +24,13 @@ class TestSocketIO(unittest.TestCase):
 
     def test_connect_canvas_emitsBoardAsJSON(self):
         client = server.socketio.test_client(server.app)
-        server_expected = server.server.board
+        board_expected = server.CanvasBoardEncoder().encode(server.server.board)
 
         client.connect('/canvas')
 
         received_data = client.get_received('/canvas')
-        server_output = received_data[0]['args'][0]
-        self.assertEqual(server_expected,server_output)
+        board_output = received_data[0]['args'][0]
+        self.assertEqual(board_expected,board_output)
 
 if __name__ == '__main__':
     unittest.main()
