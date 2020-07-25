@@ -35,9 +35,9 @@ function endPos() {
 	ctx.beginPath();
 
 	// send info using websocket
-	const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	console.log(snapshot);
-	socket.emit('send-stroke', snapshot);
+	const board_after = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	console.log(board_after);
+	socket.emit('send-stroke', board_after);
 }
 function draw(e) {
 	if (!painting) {
