@@ -39,7 +39,6 @@ function endPos() {
 	// fixes lines being all connected
 	ctx.beginPath();
 
-	// send info using websocket
 	const board_after = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	console.log(board_after);
 
