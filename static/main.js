@@ -6,21 +6,48 @@ const ctx = canvas.getContext("2d");
 canvas.height = 500;
 canvas.width = 500;
 
+// variable for initial board state
+var board_initial;
+
 // Socket.io
-var socket = io('http://localhost:8080')
+var socket = io('http://localhost:8080/canvas')
 socket.on('connect', function () {
 	console.log(socket.id);
 });
 
 socket.on('broadcast-board', function (imagedata) {
+	// turn JSON into imageData
+	imagedata = JSON.parse(imagedata);
+	array = new Uint8ClampedArray(imagedata.data);
 	console.log(imagedata);
-	ctx.putImageData(imageData, 0, 0);
+	// create new ImageData & update board
+	imagedata = new ImageData(array,imagedata.width,imagedata.height);
+	ctx.putImageData(imagedata, 0, 0);
 });
+
+// get difference btw initial & after board
+function getDiff(board_i, board_a) {
+    let coord = [];
+    let val = [];
+	for (let i = 0; i < board_a.data.length; i++) {
+	    if (board_i.data[i] != board_a.data[i]) {
+	        coord.push(i);
+	        val.push(board_a.data[i]);
+	    }
+	}
+	// create JSON
+	var diff = {
+	    "coord" : coord,
+	    "val" : val
+	};
+    console.log(diff)
+    return diff
+}
 
 // detecting drawing action
 let painting = false;
-let stroke = [];
 function startPos(e) {
+	board_initial = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	painting = true;
 	// fix not drawing when clicking
 	draw(e);
@@ -30,11 +57,12 @@ function endPos() {
 	// reset path every time when ending
 	// fixes lines being all connected
 	ctx.beginPath();
-
-	// send info using websocket
-	const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	console.log(snapshot);
-	socket.emit('send-stroke', snapshot);
+	// get final board state
+	const board_after = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	console.log(board_after);
+	// get difference & emit
+	diff = getDiff(board_initial, board_after);
+	socket.emit('send-stroke', diff);
 }
 function draw(e) {
 	if (!painting) {
