@@ -1,7 +1,7 @@
 import threading
 from flask import Flask
 from flask_socketio import SocketIO, emit
-from canvas_board import CanvasBoard
+from canvas_board import CanvasBoard, CanvasBoardEncoder
 
 # constants
 PORT = 8080
@@ -31,7 +31,9 @@ server = Server(imagedata)
 @socketio.on('connect', namespace='/canvas')
 def connect_canvas():
     # broadcast board upon initial connect at /canvas endpoint
-    emit('broadcast-board', server.board)
+    # turn board into JSON
+    board = CanvasBoardEncoder().encode(server.board)
+    emit('broadcast-board', board)
 
 @socketio.on('connect')
 def on_connect():

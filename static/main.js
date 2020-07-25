@@ -16,7 +16,12 @@ socket.on('connect', function () {
 });
 
 socket.on('broadcast-board', function (imagedata) {
+	// turn JSON into imageData
+	imagedata = JSON.parse(imagedata);
+	array = new Uint8ClampedArray(imagedata.data);
 	console.log(imagedata);
+	// create new ImageData & update board
+	imagedata = new ImageData(array,imagedata.width,imagedata.height);
 	ctx.putImageData(imagedata, 0, 0);
 	board_initial = ctx.getImageData(0, 0, canvas.width, canvas.height);
 });
