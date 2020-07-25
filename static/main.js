@@ -28,7 +28,7 @@ socket.on('broadcast-board', function (imagedata) {
 // get difference btw initial & after board
 function getDiff(board_i, board_a) {
     let coord = [];
-	let val = [];
+    let val = [];
 	for (let i = 0; i < board_a.data.length; i++) {
 	    if (board_i.data[i] != board_a.data[i]) {
 	        coord.push(i);
