@@ -6,6 +6,9 @@ const ctx = canvas.getContext("2d");
 canvas.height = 500;
 canvas.width = 500;
 
+// variable for initial board state
+var board_initial;
+
 // Socket.io
 var socket = io('http://localhost:8080')
 socket.on('connect', function () {
