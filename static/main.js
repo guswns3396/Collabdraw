@@ -23,12 +23,12 @@ socket.on('broadcast-board', function (imagedata) {
 	// create new ImageData & update board
 	imagedata = new ImageData(array,imagedata.width,imagedata.height);
 	ctx.putImageData(imagedata, 0, 0);
-	board_initial = ctx.getImageData(0, 0, canvas.width, canvas.height);
 });
 
 // detecting drawing action
 let painting = false;
 function startPos(e) {
+	board_initial = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	painting = true;
 	// fix not drawing when clicking
 	draw(e);
