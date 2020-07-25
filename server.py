@@ -1,5 +1,4 @@
 import threading
-import json
 from flask import Flask
 from flask_socketio import SocketIO, emit
 from canvas_board import CanvasBoard, CanvasBoardEncoder
@@ -50,6 +49,9 @@ def on_disconnect():
 def handle_send_stroke(diff):
     # diff -> dict
     server.updateBoard(diff)
+    # turn board into JSON
+    board = CanvasBoardEncoder().encode(server.board)
+    emit('broadcast-board', board)
 
 if __name__ == "__main__":
     socketio.run(app, port=PORT, debug=True)
