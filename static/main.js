@@ -18,7 +18,7 @@ socket.on('connect', function () {
 socket.on('broadcast-board', function (imagedata) {
 	console.log(imagedata);
 	ctx.putImageData(imagedata, 0, 0);
-	ctx.getImageData(0, 0, canvas.width, canvas.height);
+	board_initial = ctx.getImageData(0, 0, canvas.width, canvas.height);
 });
 
 // detecting drawing action
