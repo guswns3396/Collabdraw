@@ -37,7 +37,7 @@ def connect_canvas():
     # broadcast board upon initial connect at /canvas endpoint
     # turn board into JSON
     board = CanvasBoardEncoder().encode(server.board)
-    emit('broadcast-board', board, broadcast=True)
+    emit('broadcast-board', board)
 
 @socketio.on('disconnect')
 def on_disconnect():
@@ -49,7 +49,7 @@ def handle_send_stroke(diff):
     server.updateBoard(diff)
     # turn board into JSON
     board = CanvasBoardEncoder().encode(server.board)
-    emit('broadcast-board', board)
+    emit('broadcast-board', board, broadcast=True)
 
 if __name__ == "__main__":
     socketio.run(app, port=PORT, debug=True)
