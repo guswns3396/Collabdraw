@@ -37,10 +37,6 @@ def connect_canvas():
     board = CanvasBoardEncoder().encode(server.board)
     emit('broadcast-board', board)
 
-@socketio.on('connect')
-def on_connect():
-    print("connected to websocket")
-
 @socketio.on('disconnect')
 def on_disconnect():
     print("disconnected from websocket")
