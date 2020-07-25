@@ -10,14 +10,15 @@ canvas.width = 500;
 var board_initial;
 
 // Socket.io
-var socket = io('http://localhost:8080')
+var socket = io('http://localhost:8080/canvas')
 socket.on('connect', function () {
 	console.log(socket.id);
 });
 
 socket.on('broadcast-board', function (imagedata) {
 	console.log(imagedata);
-	ctx.putImageData(imageData, 0, 0);
+	ctx.putImageData(imagedata, 0, 0);
+	ctx.getImageData(0, 0, canvas.width, canvas.height);
 });
 
 // detecting drawing action
