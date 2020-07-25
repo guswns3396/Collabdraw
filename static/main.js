@@ -37,7 +37,25 @@ function endPos() {
 	// send info using websocket
 	const board_after = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	console.log(board_after);
-	socket.emit('send-stroke', board_after);
+
+	// get difference btw initial & after board
+	let coord = [];
+	let val = [];
+	for (let i = 0; i < board_after.data.length; i++) {
+	    if (board_initial.data[i] != board_after.data[i]) {
+	        coord.push(i);
+	        val.push(board_after.data[i]);
+	    }
+	}
+
+	// create JSON
+	var diff = {
+	    "coord" : coord,
+	    "val" : val
+	};
+
+    console.log(diff)
+	socket.emit('send-stroke', diff);
 }
 function draw(e) {
 	if (!painting) {
