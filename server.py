@@ -37,7 +37,7 @@ def connect_canvas():
     # broadcast board upon initial connect at /canvas endpoint
     # turn board into JSON
     board = CanvasBoardEncoder().encode(server.board)
-    emit('broadcast-board', board)
+    emit('broadcast-board', board, broadcast=True)
 
 @socketio.on('disconnect')
 def on_disconnect():
