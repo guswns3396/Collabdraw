@@ -5,14 +5,6 @@ import server
 
 class TestSocketIO(unittest.TestCase):
 
-    def test_connect_printsConnectionMessage(self):
-        expectedOutput = "connected to websocket\n"
-
-        with patch('sys.stdout', new=io.StringIO()) as myOutput:
-            client = server.socketio.test_client(server.app)
-
-            self.assertEqual(myOutput.getvalue(), expectedOutput)
-
     def test_disconnect_printsDisconnectionMessage(self):
         client = server.socketio.test_client(server.app)
         expectedOutput = "disconnected from websocket\n"

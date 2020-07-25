@@ -36,6 +36,11 @@ class CanvasBoard:
         start_ind = row * (self.width * 4) + col * 4
         return tuple(self.data[start_ind:start_ind + 4])
 
+    def updateBoard(self, coord: list, val: list):
+        numPixels = len(coord)
+        for i in range(numPixels):
+            self.data[coord[i]] = val[i]
+
 class CanvasBoardEncoder(JSONEncoder):
     def default(self, o):
         return o.__dict__
