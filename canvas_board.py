@@ -1,3 +1,5 @@
+from json import JSONEncoder
+
 class CanvasBoard:
     """Represents the image data of the canvas board.
 
@@ -33,3 +35,7 @@ class CanvasBoard:
                 .format(row, col, self.height, self.width))
         start_ind = row * (self.width * 4) + col * 4
         return tuple(self.data[start_ind:start_ind + 4])
+
+class CanvasBoardEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__
