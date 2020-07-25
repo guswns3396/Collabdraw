@@ -38,10 +38,9 @@ function endPos() {
 	// reset path every time when ending
 	// fixes lines being all connected
 	ctx.beginPath();
-
+	// get final board state
 	const board_after = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	console.log(board_after);
-
 	// get difference btw initial & after board
 	let coord = [];
 	let val = [];
@@ -51,13 +50,11 @@ function endPos() {
 	        val.push(board_after.data[i]);
 	    }
 	}
-
 	// create JSON
 	var diff = {
 	    "coord" : coord,
 	    "val" : val
 	};
-
     console.log(diff)
 	socket.emit('send-stroke', diff);
 }
