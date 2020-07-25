@@ -25,6 +25,25 @@ socket.on('broadcast-board', function (imagedata) {
 	ctx.putImageData(imagedata, 0, 0);
 });
 
+// get difference btw initial & after board
+function getDiff(board_i, board_a) {
+    let coord = [];
+	let val = [];
+	for (let i = 0; i < board_a.data.length; i++) {
+	    if (board_i.data[i] != board_a.data[i]) {
+	        coord.push(i);
+	        val.push(board_a.data[i]);
+	    }
+	}
+	// create JSON
+	var diff = {
+	    "coord" : coord,
+	    "val" : val
+	};
+    console.log(diff)
+    return diff
+}
+
 // detecting drawing action
 let painting = false;
 function startPos(e) {
@@ -41,21 +60,8 @@ function endPos() {
 	// get final board state
 	const board_after = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	console.log(board_after);
-	// get difference btw initial & after board
-	let coord = [];
-	let val = [];
-	for (let i = 0; i < board_after.data.length; i++) {
-	    if (board_initial.data[i] != board_after.data[i]) {
-	        coord.push(i);
-	        val.push(board_after.data[i]);
-	    }
-	}
-	// create JSON
-	var diff = {
-	    "coord" : coord,
-	    "val" : val
-	};
-    console.log(diff)
+	// get difference & emit
+	diff = getDiff(board_initial, board_after);
 	socket.emit('send-stroke', diff);
 }
 function draw(e) {
