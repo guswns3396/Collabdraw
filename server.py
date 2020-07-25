@@ -22,6 +22,7 @@ class Server:
         self.lock.acquire()
         self.board.updateBoard(diff['coord'], diff['val'])
         self.lock.release()
+
 # instantiate server class for board state
 imagedata = {
     'width': WIDTH,
