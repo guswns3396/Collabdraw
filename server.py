@@ -31,6 +31,10 @@ imagedata = {
 }
 server = Server(imagedata)
 
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
 @socketio.on('connect', namespace='/canvas')
 def connect_canvas():
     # broadcast board upon initial connect at /canvas endpoint
