@@ -48,7 +48,7 @@ def handle_send_stroke(diff):
     server.updateBoard(diff)
     # turn board into JSON
     board = CanvasBoardEncoder().encode(server.board)
-    emit('broadcast-board', board)
+    emit('broadcast-board', board, broadcast=True)
 
 if __name__ == "__main__":
     socketio.run(app, port=PORT, debug=True)
