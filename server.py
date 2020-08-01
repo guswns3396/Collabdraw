@@ -1,6 +1,6 @@
 import threading
 from flask import Flask
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from canvas_board import CanvasBoard, CanvasBoardEncoder
 
 # constants
@@ -53,6 +53,22 @@ def handle_send_stroke(stroke):
     server.update_board(stroke['diffs'])
     # broadcast the new change
     emit('broadcast-stroke', stroke, broadcast=True)
+
+@socketio.on('join')
+def on_join(room_data):
+    room = room_data['room_id']
+    join_room(room)
+    msg = 'A client has joined the room'
+    emit('client-join', msg, room=room)
+    board = CanvasBoardEncoder().encode(server.board)
+    emit('broadcast-board', board)
+
+@socketio.on('leave')
+def on_leave(room_data):
+    room = room_data['id']
+    leave_room(room)
+    msg = 'A client has left the room'
+    emit('client-leave', msg, room=room)
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
