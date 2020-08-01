@@ -51,4 +51,6 @@ def handle_send_stroke(diff):
     emit('broadcast-board', board, broadcast=True)
 
 if __name__ == "__main__":
-    socketio.run(app, port=PORT, debug=True)
+    # TODO(hyunbumy): Modify the host to restrict the access from the frontend
+    # served by the same production server.
+    socketio.run(app, port=PORT, debug=True, host='0.0.0.0')
