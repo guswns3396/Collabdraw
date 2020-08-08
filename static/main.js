@@ -14,6 +14,8 @@ var boardInitial;
 var socket = io('http://34.94.112.136:8080/canvas')
 socket.on('connect', function () {
 	console.log(socket.id);
+	var room_data = {'room_id': 'test'};
+	socket.emit('join', room_data);
 });
 
 socket.on('initialize-board', function (board) {

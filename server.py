@@ -54,11 +54,12 @@ def handle_send_stroke(stroke):
     # broadcast the new change
     emit('broadcast-stroke', stroke, broadcast=True)
 
-@socketio.on('join')
+@socketio.on('join', namespace='/canvas')
 def on_join(room_data):
     room = room_data['room_id']
     join_room(room)
     msg = 'A client has joined the room'
+    print(msg, room_data['room_id'])
     emit('client-join', msg, room=room)
     board = CanvasBoardEncoder().encode(server.board)
     emit('broadcast-board', board)
