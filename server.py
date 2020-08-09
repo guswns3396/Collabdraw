@@ -1,5 +1,5 @@
 import threading
-from flask import Flask, render_template, request
+from flask import Flask, request, redirect
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from canvas_board import CanvasBoard, CanvasBoardEncoder
 
