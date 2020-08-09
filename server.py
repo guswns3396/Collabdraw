@@ -15,8 +15,8 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 
 # server class
 class Server:
-    def __init__(self, imagedata):
-        self.board = CanvasBoard(imagedata)
+    def __init__(self, boards: 'dict that maps room id to CanvasBoard'):
+        self.boards = boards
         self.lock = threading.Lock()
 
     def update_board(self, diffs: list):
@@ -31,7 +31,7 @@ imagedata = {
     'height': HEIGHT,
     'data': [0 for i in range(4 * WIDTH * HEIGHT)]
 }
-server = Server(imagedata)
+server = Server({})
 
 rooms = []
 
@@ -71,11 +71,14 @@ def handle_send_stroke(stroke):
 @socketio.on('join', namespace='/canvas')
 def on_join(room_data):
     room = room_data['room_id']
+    # instantiate initial CanvasBoard
+    if room not in server.boards:
+        server.boards[room] = CanvasBoard(imagedata)
     join_room(room)
     msg = 'A client has joined the room'
     print(msg, room)
     emit('client-join', msg, room=room)
-    board = CanvasBoardEncoder().encode(server.board)
+    board = CanvasBoardEncoder().encode(server.boards[room])
     emit('broadcast-board', board)
 
 if __name__ == "__main__":
