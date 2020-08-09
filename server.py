@@ -70,15 +70,15 @@ def handle_send_stroke(stroke):
 
 @socketio.on('join', namespace='/canvas')
 def on_join(room_data):
-    room = room_data['room_id']
+    room_id = room_data['room_id']
     # instantiate initial CanvasBoard
-    if room not in server.boards:
-        server.boards[room] = CanvasBoard(imagedata)
-    join_room(room)
+    if room_id not in server.boards:
+        server.boards[room_id] = CanvasBoard(imagedata)
+    join_room(room_id)
     msg = 'A client has joined the room'
-    print(msg, room)
-    emit('client-join', msg, room=room)
-    board = CanvasBoardEncoder().encode(server.boards[room])
+    print(msg, room_id)
+    emit('client-join', msg, room=room_id)
+    board = CanvasBoardEncoder().encode(server.boards[room_id])
     emit('broadcast-board', board)
 
 if __name__ == "__main__":
