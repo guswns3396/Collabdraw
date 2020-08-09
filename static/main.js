@@ -16,7 +16,7 @@ socket.on('connect', function () {
 	console.log(socket.id);
 });
 
-socket.on('broadcast-board', function (imagedata) {:webkitCancelAnimationFrame
+socket.on('broadcast-board', function (imagedata) {
 	// turn JSON into imageData
 	imagedata = JSON.parse(imagedata);
 	array = new Uint8ClampedArray(imagedata.data);
