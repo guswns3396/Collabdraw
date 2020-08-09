@@ -1,5 +1,5 @@
 import threading
-from flask import Flask
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from canvas_board import CanvasBoard, CanvasBoardEncoder
 
@@ -9,7 +9,7 @@ HEIGHT = 500
 WIDTH = 500
 
 # create Flask object
-app = Flask(__name__)
+app = Flask(__name__, template_folder='static/', static_folder='static/')
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins='*')
 
@@ -59,17 +59,17 @@ def on_join(room_data):
     room = room_data['room_id']
     join_room(room)
     msg = 'A client has joined the room'
-    print(msg, room_data['room_id'])
+    print(msg, room)
     emit('client-join', msg, room=room)
     board = CanvasBoardEncoder().encode(server.board)
     emit('broadcast-board', board)
 
-@socketio.on('leave')
-def on_leave(room_data):
-    room = room_data['id']
-    leave_room(room)
-    msg = 'A client has left the room'
-    emit('client-leave', msg, room=room)
+# @socketio.on('leave')
+# def on_leave(room_data):
+#     room = room_data['id']
+#     leave_room(room)
+#     msg = 'A client has left the room'
+#     emit('client-leave', msg, room=room)
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
