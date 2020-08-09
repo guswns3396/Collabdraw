@@ -10,12 +10,13 @@ canvas.width = 500;
 var board_initial;
 
 // Socket.io
-var socket = io('http://localhost:8080/canvas')
+// TODO(hyunbumy): Use a separate config file to specify the endpoint address.
+var socket = io('http://34.94.112.136:8080/canvas')
 socket.on('connect', function () {
 	console.log(socket.id);
 });
 
-socket.on('broadcast-board', function (imagedata) {
+socket.on('broadcast-board', function (imagedata) {:webkitCancelAnimationFrame
 	// turn JSON into imageData
 	imagedata = JSON.parse(imagedata);
 	array = new Uint8ClampedArray(imagedata.data);
