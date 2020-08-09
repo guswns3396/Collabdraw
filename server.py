@@ -1,5 +1,5 @@
 import threading
-from flask import Flask, request, redirect
+from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from canvas_board import CanvasBoard, CanvasBoardEncoder
 
@@ -33,9 +33,21 @@ imagedata = {
 }
 server = Server(imagedata)
 
+rooms = []
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
+
+@app.route('/create')
+def create():
+    # TODO: Make random room id & check if valid
+    room = 'TestRoom'
+    rooms.append(room)
+    response = jsonify(room_id=room)
+    # just return response with room id
+    # don't worry about frontend
+    return response
 
 @socketio.on('connect', namespace='/canvas')
 def connect_canvas():
@@ -48,6 +60,8 @@ def connect_canvas():
 def on_disconnect():
     print("disconnected from websocket")
 
+# TODO: differentiate btw strokes from different rooms
+# use a dictionary to map session id to room?
 @socketio.on('send-stroke', namespace="/canvas")
 def handle_send_stroke(stroke):
     server.update_board(stroke['diffs'])
@@ -63,13 +77,6 @@ def on_join(room_data):
     emit('client-join', msg, room=room)
     board = CanvasBoardEncoder().encode(server.board)
     emit('broadcast-board', board)
-
-# @socketio.on('leave')
-# def on_leave(room_data):
-#     room = room_data['id']
-#     leave_room(room)
-#     msg = 'A client has left the room'
-#     emit('client-leave', msg, room=room)
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
