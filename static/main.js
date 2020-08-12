@@ -15,33 +15,38 @@ socket.on('connect', function () {
 	console.log(socket.id);
 });
 
-socket.on('broadcast-board', function (imagedata) {
+socket.on('initialize-board', function (board) {
 	// turn JSON into imageData
-	imagedata = JSON.parse(imagedata);
-	array = new Uint8ClampedArray(imagedata.data);
-	console.log(imagedata);
-	// create new ImageData & update board
-	imagedata = new ImageData(array,imagedata.width,imagedata.height);
-	ctx.putImageData(imagedata, 0, 0);
+	var initialBoard = JSON.parse(board);
+	ctx.putImageData(initialBoard, 0, 0);
 });
+
+socket.on('broadcast-stroke', function (diffs) {
+	var updateDiffs = JSON.parse(diffs);
+	var updatedBoard = updateBoard(updateDiffs);
+	console.log(updatedBoard);
+	ctx.putImageData(updatedBoard, 0, 0);
+});
+
+function updateBoard(diffs) {
+	let currentBoard = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	for (let i = 0; i < diffs.length; i++) {
+		let diff = diffs[i];
+		currentBoard.data[diff.coord] = diff.val;
+	}
+	return currentBoard;
+}
 
 // get difference btw initial & after board
 function getDiff(board_i, board_a) {
-    let coord = [];
-    let val = [];
+	let diffs = [];
 	for (let i = 0; i < board_a.data.length; i++) {
 	    if (board_i.data[i] != board_a.data[i]) {
-	        coord.push(i);
-	        val.push(board_a.data[i]);
+			diffs.push({"coord": i, "val": board_a.data[i]});
 	    }
 	}
-	// create JSON
-	var diff = {
-	    "coord" : coord,
-	    "val" : val
-	};
-    console.log(diff)
-    return diff
+    console.log(diffs);
+    return diffs;
 }
 
 // detecting drawing action
