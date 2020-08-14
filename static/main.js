@@ -7,7 +7,7 @@ canvas.height = 500;
 canvas.width = 500;
 
 // variable for initial board state
-var board_initial;
+var boardInitial;
 
 // Socket.io
 var socket = io('http://localhost:8080/canvas')
@@ -17,13 +17,16 @@ socket.on('connect', function () {
 
 socket.on('initialize-board', function (board) {
 	// turn JSON into imageData
-	var initialBoard = JSON.parse(board);
-	ctx.putImageData(initialBoard, 0, 0);
+	let initialBoard = JSON.parse(board);
+	let initialImagedata = new ImageData(
+		new Uint8ClampedArray(initialBoard.data),
+		initialBoard.width,
+		initialBoard.height);
+	ctx.putImageData(initialImagedata, 0, 0);
 });
 
-socket.on('broadcast-stroke', function (diffs) {
-	var updateDiffs = JSON.parse(diffs);
-	var updatedBoard = updateBoard(updateDiffs);
+socket.on('broadcast-stroke', function (stroke) {
+	let updatedBoard = updateBoard(stroke.diffs);
 	console.log(updatedBoard);
 	ctx.putImageData(updatedBoard, 0, 0);
 });
@@ -38,21 +41,21 @@ function updateBoard(diffs) {
 }
 
 // get difference btw initial & after board
-function getDiff(board_i, board_a) {
+function getDiffs(board_i, board_a) {
 	let diffs = [];
 	for (let i = 0; i < board_a.data.length; i++) {
-	    if (board_i.data[i] != board_a.data[i]) {
-			diffs.push({"coord": i, "val": board_a.data[i]});
-	    }
+		if (board_i.data[i] != board_a.data[i]) {
+			diffs.push({ "coord": i, "val": board_a.data[i] });
+		}
 	}
-    console.log(diffs);
-    return diffs;
+	console.log(diffs);
+	return diffs;
 }
 
 // detecting drawing action
 let painting = false;
 function startPos(e) {
-	board_initial = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	boardInitial = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	painting = true;
 	// fix not drawing when clicking
 	draw(e);
@@ -63,11 +66,10 @@ function endPos() {
 	// fixes lines being all connected
 	ctx.beginPath();
 	// get final board state
-	const board_after = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	console.log(board_after);
+	const boardAfter = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	console.log(boardAfter);
 	// get difference & emit
-	diff = getDiff(board_initial, board_after);
-	socket.emit('send-stroke', diff);
+	socket.emit('send-stroke', {diffs: getDiffs(boardInitial, boardAfter)});
 }
 function draw(e) {
 	if (!painting) {

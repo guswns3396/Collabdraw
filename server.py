@@ -45,10 +45,10 @@ def on_disconnect():
     print("disconnected from websocket")
 
 @socketio.on('send-stroke', namespace="/canvas")
-def handle_send_stroke(diffs):
-    server.update_board(diffs)
+def handle_send_stroke(stroke):
+    server.update_board(stroke['diffs'])
     # broadcast the new change
-    emit('broadcast-stroke', diffs, broadcast=True)
+    emit('broadcast-stroke', stroke, broadcast=True)
 
 if __name__ == "__main__":
     socketio.run(app, port=PORT, debug=True)

@@ -28,7 +28,7 @@ class TestSocketIO(unittest.TestCase):
     def test_sendStroke_updatesBoardState(self):
         client = server.socketio.test_client(server.app)
         client.connect('/canvas')
-        diffs = [{'coord': 0, 'val': 100}]
+        diffs = {'diffs': [{'coord': 0, 'val': 100}]}
 
         client.emit('send-stroke', diffs, namespace='/canvas')
 
@@ -39,14 +39,14 @@ class TestSocketIO(unittest.TestCase):
         client1.connect('/canvas')
         client2 = server.socketio.test_client(server.app)
         client2.connect('/canvas')
-        diffs = [{'coord': 0, 'val': 100}]
+        stroke = {'diffs': [{'coord': 0, 'val': 100}]}
 
-        client1.emit('send-stroke', diffs, namespace='/canvas')
+        client1.emit('send-stroke', stroke, namespace='/canvas')
 
         received = client2.get_received('/canvas')
         self.assertIn({
             'name': 'broadcast-stroke',
-            'args': [diffs],
+            'args': [stroke],
             'namespace': '/canvas'
         }, received)
 
