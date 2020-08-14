@@ -87,3 +87,28 @@ function draw(e) {
 canvas.addEventListener("mousedown", startPos);
 canvas.addEventListener("mouseup", endPos);
 canvas.addEventListener("mousemove", draw);
+
+canvas.addEventListener("touchstart", function(e){
+    var touch = e.touches[0];
+    var mouseEvent = new MouseEvent("mousedown", {
+      clientX: touch.clientX,
+	  clientY: touch.clientY
+	});
+	canvas.dispatchEvent(mouseEvent);
+	e.preventDefault();
+});
+canvas.addEventListener("touchend", function(e) {
+	let touch = e.touches[0];
+    let mouseEvent = new MouseEvent("mouseup");
+	canvas.dispatchEvent(mouseEvent);
+	e.preventDefault();
+});
+canvas.addEventListener("touchmove", function(e) {
+	let touch = e.touches[0];
+    let mouseEvent = new MouseEvent("mousemove", {
+      clientX: touch.clientX,
+	  clientY: touch.clientY
+	});
+	canvas.dispatchEvent(mouseEvent);
+	e.preventDefault();
+});
