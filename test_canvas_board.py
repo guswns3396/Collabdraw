@@ -45,11 +45,19 @@ class TestCanvasBoard(unittest.TestCase):
     def test_get_pixel_for_coordinate_invalid_coordinate_raises_value_error(
             self):
         imagedata = {'width': 1, 'height': 1, 'data': [0, 0, 0, 0]}
-        canvas_board= CanvasBoard(imagedata)
+        canvas_board = CanvasBoard(imagedata)
 
         with self.assertRaises(ValueError):
             canvas_board.get_pixel_for_coordinate(100, 100)
 
+    def test_update_board(self):
+        imagedata = {'width': 1, 'height': 1, 'data': [0, 0, 0, 0]}
+        canvas_board = CanvasBoard(imagedata)
+        diffs = [{'coord': 0, 'val': 100}]
+
+        canvas_board.update_board(diffs)
+
+        self.assertEqual(canvas_board.data[0], 100)
 
 if __name__ == '__main__':
     unittest.main()

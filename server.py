@@ -18,10 +18,12 @@ class Server:
     def __init__(self, imagedata):
         self.board = CanvasBoard(imagedata)
         self.lock = threading.Lock()
-    def updateBoard(self, diff: dict):
+
+    def update_board(self, diffs: list):
         self.lock.acquire()
-        self.board.updateBoard(diff['coord'], diff['val'])
+        self.board.update_board(diffs)
         self.lock.release()
+
 
 # instantiate server class for board state
 imagedata = {
@@ -36,19 +38,17 @@ def connect_canvas():
     # broadcast board upon initial connect at /canvas endpoint
     # turn board into JSON
     board = CanvasBoardEncoder().encode(server.board)
-    emit('broadcast-board', board)
+    emit('initialize-board', board)
 
 @socketio.on('disconnect')
 def on_disconnect():
     print("disconnected from websocket")
 
 @socketio.on('send-stroke', namespace="/canvas")
-def handle_send_stroke(diff):
-    # diff -> dict
-    server.updateBoard(diff)
-    # turn board into JSON
-    board = CanvasBoardEncoder().encode(server.board)
-    emit('broadcast-board', board, broadcast=True)
+def handle_send_stroke(diffs):
+    server.update_board(diffs)
+    # broadcast the new change
+    emit('broadcast-stroke', diffs, broadcast=True)
 
 if __name__ == "__main__":
     socketio.run(app, port=PORT, debug=True)

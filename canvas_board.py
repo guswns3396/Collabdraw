@@ -36,10 +36,9 @@ class CanvasBoard:
         start_ind = row * (self.width * 4) + col * 4
         return tuple(self.data[start_ind:start_ind + 4])
 
-    def updateBoard(self, coord: list, val: list):
-        numPixels = len(coord)
-        for i in range(numPixels):
-            self.data[coord[i]] = val[i]
+    def update_board(self, diffs: list):
+        for diff in diffs:
+            self.data[diff['coord']] = diff['val']
 
 class CanvasBoardEncoder(JSONEncoder):
     def default(self, o):
