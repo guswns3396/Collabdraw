@@ -31,6 +31,10 @@ imagedata = {
 }
 server = Server(imagedata)
 
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
 @socketio.on('connect', namespace='/canvas')
 def connect_canvas():
     # broadcast board upon initial connect at /canvas endpoint
@@ -51,4 +55,6 @@ def handle_send_stroke(diff):
     emit('broadcast-board', board, broadcast=True)
 
 if __name__ == "__main__":
-    socketio.run(app, port=PORT, debug=True)
+    # TODO(hyunbumy): Modify the host to restrict the access from the frontend
+    # served by the same production server.
+    socketio.run(app, port=PORT, debug=True, host='0.0.0.0')
