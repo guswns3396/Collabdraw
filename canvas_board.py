@@ -46,4 +46,5 @@ class CanvasBoard:
 
 class CanvasBoardEncoder(JSONEncoder):
     def default(self, o):
+        del o.__dict__['lock']
         return o.__dict__
