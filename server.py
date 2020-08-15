@@ -1,4 +1,3 @@
-import threading
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from canvas_board import CanvasBoard, CanvasBoardEncoder
@@ -20,12 +19,9 @@ class Server:
         :param boards: dict that maps room id to CanvasBoard
         """
         self.boards = boards
-        self.lock = threading.Lock()
 
     def update_board(self, diffs: list, room_id: str):
-        self.lock.acquire()
         self.boards[room_id].update_board(diffs)
-        self.lock.release()
 
 # instantiate server class for board state
 imagedata = {

@@ -1,3 +1,4 @@
+import threading
 from json import JSONEncoder
 
 class CanvasBoard:
@@ -20,6 +21,7 @@ class CanvasBoard:
         self.width = imagedata['width']
         self.height = imagedata['height']
         self.data = imagedata['data']
+        self.lock = threading.Lock()
 
         if len(self.data) != self.width * self.height * 4:
             raise ValueError(
@@ -37,8 +39,10 @@ class CanvasBoard:
         return tuple(self.data[start_ind:start_ind + 4])
 
     def update_board(self, diffs: list):
+        self.lock.acquire()
         for diff in diffs:
             self.data[diff['coord']] = diff['val']
+        self.lock.release()
 
 class CanvasBoardEncoder(JSONEncoder):
     def default(self, o):
