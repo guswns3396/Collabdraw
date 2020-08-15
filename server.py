@@ -15,15 +15,17 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 
 # server class
 class Server:
-    def __init__(self, boards: 'dict that maps room id to CanvasBoard'):
+    def __init__(self, boards):
+        """
+        :param boards: dict that maps room id to CanvasBoard
+        """
         self.boards = boards
         self.lock = threading.Lock()
 
-    def update_board(self, diffs: list):
+    def update_board(self, diffs: list, room_id: str):
         self.lock.acquire()
-        self.board.update_board(diffs)
+        self.boards[room_id].update_board(diffs)
         self.lock.release()
-
 
 # instantiate server class for board state
 imagedata = {
@@ -51,22 +53,20 @@ def create():
 
 @socketio.on('connect', namespace='/canvas')
 def connect_canvas():
-    # broadcast board upon initial connect at /canvas endpoint
-    # turn board into JSON
-    board = CanvasBoardEncoder().encode(server.board)
-    emit('initialize-board', board)
+    print("connected to websocket")
 
 @socketio.on('disconnect')
 def on_disconnect():
     print("disconnected from websocket")
 
-# TODO: differentiate btw strokes from different rooms
-# use a dictionary to map session id to room?
 @socketio.on('send-stroke', namespace="/canvas")
-def handle_send_stroke(stroke):
-    server.update_board(stroke['diffs'])
-    # broadcast the new change
-    emit('broadcast-stroke', stroke, broadcast=True)
+def handle_send_stroke(stroke, room_data):
+    room_id = room_data['room_id']
+    if room_id in server.boards:
+        server.update_board(stroke['diffs'], room_id)
+        emit('broadcast-stroke', stroke, broadcast=True, room=room_id)
+    else:
+        print("Error: no room found")
 
 @socketio.on('join', namespace='/canvas')
 def on_join(room_data):
@@ -77,9 +77,8 @@ def on_join(room_data):
     join_room(room_id)
     msg = 'A client has joined the room'
     print(msg, room_id)
-    emit('client-join', msg, room=room_id)
     board = CanvasBoardEncoder().encode(server.boards[room_id])
-    emit('broadcast-board', board)
+    emit('initialize-board', board, room=room_id)
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
