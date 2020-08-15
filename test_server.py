@@ -14,16 +14,15 @@ class TestSocketIO(unittest.TestCase):
 
             self.assertEqual(myOutput.getvalue(), expectedOutput)
 
-    def test_connect_canvas_emitsBoardAsJSON(self):
+    def test_connect_canvas_printsConnectionMessage(self):
+        expectedOutput = "connected to websocket\n"
         client = server.socketio.test_client(server.app)
-        board_expected = server.CanvasBoardEncoder().encode(
-            server.server.board)
 
-        client.connect('/canvas')
+        with patch('sys.stdout', new=io.StringIO()) as myOutput:
+            client.connect('/canvas')
+            output = myOutput.getvalue()
 
-        received_data = client.get_received('/canvas')
-        board_output = received_data[0]['args'][0]
-        self.assertEqual(board_expected, board_output)
+        self.assertEqual(expectedOutput, output)
 
     def test_sendStroke_updatesBoardState(self):
         client = server.socketio.test_client(server.app)
