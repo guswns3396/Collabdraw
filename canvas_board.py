@@ -1,4 +1,5 @@
 import threading
+import copy
 from json import JSONEncoder
 
 class CanvasBoard:
@@ -46,5 +47,7 @@ class CanvasBoard:
 
 class CanvasBoardEncoder(JSONEncoder):
     def default(self, o):
-        del o.__dict__['lock']
-        return o.__dict__
+        o.__dict__['lock'] = None
+        cpy = copy.deepcopy(o.__dict__)
+        o.__dict__['lock'] = threading.Lock()
+        return cpy
