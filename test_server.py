@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 import io
 import server
-
+import json
 
 class TestSocketIO(unittest.TestCase):
     def test_disconnect_printsDisconnectionMessage(self):
@@ -24,14 +24,63 @@ class TestSocketIO(unittest.TestCase):
 
         self.assertEqual(expectedOutput, output)
 
+    def test_on_join_initializesBoard(self):
+        client1 = server.socketio.test_client(server.app)
+        client1.connect('/canvas')
+        room_data = {'room_id': 'myTestRoom'}
+        client1.emit('join', room_data, namespace='/canvas')
+        diffs = {'diffs': [{'coord': 0, 'val': 100}]}
+        client1.emit('send-stroke', diffs, room_data, namespace='/canvas')
+        client2 = server.socketio.test_client(server.app)
+        client2.connect('/canvas')
+
+        client2.emit('join', room_data, namespace='/canvas')
+
+        received_data = client2.get_received('/canvas')
+        board = None
+        for data in received_data:
+            if data['name'] == 'initialize-board':
+                board = json.loads(data['args'][0])['data']
+        self.assertEqual(100, board[0])
+
+    def test_on_join_keepsBoardsSeparateForEachRoom(self):
+        client1 = server.socketio.test_client(server.app)
+        client1.connect('/canvas')
+        room_data1 = {'room_id': 'room1'}
+        client1.emit('join', room_data1, namespace='/canvas')
+        diffs = {'diffs': [{'coord': 0, 'val': 100}]}
+        client1.emit('send-stroke', diffs, room_data1, namespace='/canvas')
+        client2 = server.socketio.test_client(server.app)
+        client2.connect('/canvas')
+        room_data2 = {'room_id': 'room2'}
+
+        client2.emit('join', room_data2, namespace='/canvas')
+
+        board1 = None
+        board2 = None
+        received_data = client1.get_received('/canvas')
+        for data in received_data:
+            if data['name'] == 'initialize-board':
+                board1 = json.loads(data['args'][0])['data']
+        received_data = client2.get_received('/canvas')
+        for data in received_data:
+            if data['name'] == 'initialize-board':
+                board2 = json.loads(data['args'][0])['data']
+        self.assertNotEqual(board1, board2)
+
+    def test_sendStroke_printsErrorMessageIfNoRoomFound(self):
+        pass
+
     def test_sendStroke_updatesBoardState(self):
         client = server.socketio.test_client(server.app)
         client.connect('/canvas')
         diffs = {'diffs': [{'coord': 0, 'val': 100}]}
+        room_data = {'room_id': 'myTestRoom'}
 
-        client.emit('send-stroke', diffs, namespace='/canvas')
+        client.emit('send-stroke', diffs, room_data, namespace='/canvas')
 
-        self.assertEqual(server.server.board.data[0], 100)
+
+        self.assertEqual(server.server.boards.data[0], 100)
 
     def test_sendStroke_boardcastsDiffs(self):
         client1 = server.socketio.test_client(server.app)
