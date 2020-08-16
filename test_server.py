@@ -115,5 +115,33 @@ class TestSendStroke(unittest.TestCase):
             'namespace': '/canvas'
         }, received)
 
+class TestCreate(unittest.TestCase):
+    def test_createsID(self):
+        server.app.testing = True
+        client = server.app.test_client()
+
+        response = client.get('/create')
+
+        room_data = response.get_json()
+        id = room_data['room_id']
+        self.assertTrue(id is not None)
+
+    def test_skipsDuplicate(self):
+        server.app.testing = True
+        client1 = server.app.test_client()
+        client2 = server.app.test_client()
+        server.random.seed(0)
+        response1 = client1.get('/create')
+        room_data1 = response1.get_json()
+        id1 = room_data1['room_id']
+        server.server.boards[id1] = None
+        server.random.seed(0)
+
+        response2 = client2.get('/create')
+
+        room_data2 = response2.get_json()
+        id2 = room_data2['room_id']
+        self.assertNotEqual(id1, id2)
+
 if __name__ == '__main__':
     unittest.main()

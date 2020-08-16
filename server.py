@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+import random, string
+from flask import Flask, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from canvas_board import CanvasBoard
 from json import dumps
@@ -7,6 +8,7 @@ from json import dumps
 PORT = 8080
 HEIGHT = 500
 WIDTH = 500
+ID_LENGTH = 7
 
 # create Flask object
 app = Flask(__name__, template_folder='static/', static_folder='static/')
@@ -15,10 +17,7 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 
 # server class
 class Server:
-    def __init__(self, boards):
-        """
-        :param boards: dict that maps room id to CanvasBoard
-        """
+    def __init__(self, boards: 'dict that maps room id to CanvasBoard'):
         self.boards = boards
 
     def update_board(self, diffs: list, room_id: str):
@@ -32,17 +31,16 @@ imagedata = {
 }
 server = Server({})
 
-rooms = []
-
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
 
 @app.route('/create')
 def create():
-    # TODO: Make random room id & check if valid
-    room = 'TestRoom'
-    rooms.append(room)
+    room = None
+    while room in server.boards or room is None:
+        room = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(ID_LENGTH))
+        print(room)
     response = jsonify(room_id=room)
     # just return response with room id
     # don't worry about frontend
