@@ -60,7 +60,7 @@ def handle_send_stroke(stroke, room_data):
     room_id = room_data['room_id']
     if room_id in server.boards:
         server.update_board(stroke['diffs'], room_id)
-        emit('broadcast-stroke', stroke, broadcast=True, room=room_id)
+        emit('broadcast-stroke', stroke, room=room_id)
     else:
         print("Error: no room found")
 
@@ -74,7 +74,7 @@ def on_join(room_data):
     msg = 'A client has joined the room'
     print(msg, room_id)
     board = CanvasBoardEncoder().encode(server.boards[room_id])
-    emit('initialize-board', board, room=room_id)
+    emit('initialize-board', board)
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
