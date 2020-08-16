@@ -19,9 +19,9 @@ class CanvasBoard:
     def __init__(self, imagedata):
         """Parses a JSON of ImageData."""
 
-        self.width = imagedata['width']
-        self.height = imagedata['height']
-        self.data = imagedata['data']
+        self.width = copy.deepcopy(imagedata['width'])
+        self.height = copy.deepcopy(imagedata['height'])
+        self.data = copy.deepcopy(imagedata['data'])
         self.lock = threading.Lock()
 
         if len(self.data) != self.width * self.height * 4:

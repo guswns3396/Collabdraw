@@ -71,8 +71,7 @@ def on_join(room_data):
     if room_id not in server.boards:
         server.boards[room_id] = CanvasBoard(imagedata)
     join_room(room_id)
-    msg = 'A client has joined the room'
-    print(msg, room_id)
+    print('A client has joined the room', room_id)
     board = CanvasBoardEncoder().encode(server.boards[room_id])
     emit('initialize-board', board)
 
