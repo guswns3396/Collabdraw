@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from canvas_board import CanvasBoard, CanvasBoardEncoder
+from canvas_board import CanvasBoard
+from json import dumps
 
 # constants
 PORT = 8080
@@ -72,7 +73,7 @@ def on_join(room_data):
         server.boards[room_id] = CanvasBoard(imagedata)
     join_room(room_id)
     print('A client has joined the room', room_id)
-    board = CanvasBoardEncoder().encode(server.boards[room_id])
+    board = dumps(server.boards[room_id].toDict())
     emit('initialize-board', board)
 
 if __name__ == "__main__":

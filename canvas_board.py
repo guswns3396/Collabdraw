@@ -1,6 +1,5 @@
 import threading
 import copy
-from json import JSONEncoder
 
 class CanvasBoard:
     """Represents the image data of the canvas board.
@@ -45,9 +44,10 @@ class CanvasBoard:
             self.data[diff['coord']] = diff['val']
         self.lock.release()
 
-class CanvasBoardEncoder(JSONEncoder):
-    def default(self, o):
-        o.__dict__['lock'] = None
-        cpy = copy.deepcopy(o.__dict__)
-        o.__dict__['lock'] = threading.Lock()
-        return cpy
+    def toDict(self):
+        boardDict = {
+            'width': self.width,
+            'height': self.height,
+            'data': self.data
+        }
+        return boardDict
