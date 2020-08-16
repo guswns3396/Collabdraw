@@ -5,7 +5,7 @@ import server
 import json
 
 class TestSocketIOConnection(unittest.TestCase):
-    def test_disconnect_printsDisconnectionMessage(self):
+    def test_printsDisconnectionMessage(self):
         client = server.socketio.test_client(server.app)
         expectedOutput = "disconnected from websocket\n"
 
@@ -14,7 +14,7 @@ class TestSocketIOConnection(unittest.TestCase):
 
             self.assertEqual(myOutput.getvalue(), expectedOutput)
 
-    def test_connect_canvas_printsConnectionMessage(self):
+    def test_printsConnectionMessage(self):
         expectedOutput = "connected to websocket\n"
         client = server.socketio.test_client(server.app)
 
@@ -25,7 +25,7 @@ class TestSocketIOConnection(unittest.TestCase):
         self.assertEqual(expectedOutput, output)
 
 class TestOnJoin(unittest.TestCase):
-    def initializesBoard(self):
+    def test_initializesBoard(self):
         client1 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
         room_data = {'room_id': 'myTestRoom'}
@@ -44,7 +44,7 @@ class TestOnJoin(unittest.TestCase):
                 board = json.loads(data['args'][0])['data']
         self.assertEqual(100, board[0])
 
-    def test_on_join_keepsBoardsSeparateForEachRoom(self):
+    def test_keepsBoardsSeparateForEachRoom(self):
         client1 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
         room_data1 = {'room_id': 'room1'}
@@ -70,10 +70,20 @@ class TestOnJoin(unittest.TestCase):
         self.assertNotEqual(board1, board2)
 
 class TestSendStroke(unittest.TestCase):
-    def printsErrorMessageIfNoRoomFound(self):
-        pass
+    def test_printsErrorMessageIfNoRoomFound(self):
+        client = server.socketio.test_client(server.app)
+        client.connect('/canvas')
+        stroke = {}
+        room_data = {'room_id': 'test'}
 
-    def updatesBoardState(self):
+        with patch('sys.stdout', new=io.StringIO()) as myOutput:
+            client.emit('send-stroke', stroke, room_data)
+            output = myOutput.getvalue()
+
+        expected = "Error: no room found\n"
+        self.assertEqual(expected, output)
+
+    def test_updatesBoardState(self):
         client = server.socketio.test_client(server.app)
         client.connect('/canvas')
         diffs = {'diffs': [{'coord': 0, 'val': 100}]}
@@ -84,7 +94,7 @@ class TestSendStroke(unittest.TestCase):
 
         self.assertEqual(server.server.boards.data[0], 100)
 
-    def boardcastsDiffs(self):
+    def test_boardcastsDiffs(self):
         client1 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
         client2 = server.socketio.test_client(server.app)
