@@ -25,13 +25,13 @@ class TestSocketIOConnection(unittest.TestCase):
         self.assertEqual(expectedOutput, output)
 
 class TestOnJoin(unittest.TestCase):
-    def test_initializesBoard(self):
+    def test_initializesBoardForNewClient(self):
         client1 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
         room_data = {'room_id': 'myTestRoom'}
         client1.emit('join', room_data, namespace='/canvas')
-        diffs = {'diffs': [{'coord': 0, 'val': 100}]}
-        client1.emit('send-stroke', diffs, room_data, namespace='/canvas')
+        stroke = {'diffs': [{'coord': 0, 'val': 100}]}
+        server.server.update_board(stroke['diffs'], room_data['room_id'])
         client2 = server.socketio.test_client(server.app)
         client2.connect('/canvas')
 
@@ -49,25 +49,21 @@ class TestOnJoin(unittest.TestCase):
         client1.connect('/canvas')
         room_data1 = {'room_id': 'room1'}
         client1.emit('join', room_data1, namespace='/canvas')
-        diffs = {'diffs': [{'coord': 0, 'val': 100}]}
-        client1.emit('send-stroke', diffs, room_data1, namespace='/canvas')
+        stroke = {'diffs': [{'coord': 0, 'val': 100}]}
+        server.server.update_board(stroke['diffs'], room_data1['room_id'])
         client2 = server.socketio.test_client(server.app)
         client2.connect('/canvas')
         room_data2 = {'room_id': 'room2'}
 
         client2.emit('join', room_data2, namespace='/canvas')
 
-        board1 = None
+        board1 = server.server.boards[room_data1['room_id']].data
         board2 = None
-        received_data = client1.get_received('/canvas')
-        for data in received_data:
-            if data['name'] == 'initialize-board':
-                board1 = json.loads(data['args'][0])['data']
         received_data = client2.get_received('/canvas')
         for data in received_data:
             if data['name'] == 'initialize-board':
                 board2 = json.loads(data['args'][0])['data']
-        self.assertNotEqual(board1, board2)
+        self.assertNotEqual(board1[0], board2[0])
 
 class TestSendStroke(unittest.TestCase):
     def test_printsErrorMessageIfNoRoomFound(self):
@@ -77,31 +73,40 @@ class TestSendStroke(unittest.TestCase):
         room_data = {'room_id': 'test'}
 
         with patch('sys.stdout', new=io.StringIO()) as myOutput:
-            client.emit('send-stroke', stroke, room_data)
+            client.emit('send-stroke', stroke, room_data, namespace='/canvas')
             output = myOutput.getvalue()
 
         expected = "Error: no room found\n"
         self.assertEqual(expected, output)
 
-    def test_updatesBoardState(self):
-        client = server.socketio.test_client(server.app)
-        client.connect('/canvas')
+    def test_updatesBoardStateByRoom(self):
+        client1 = server.socketio.test_client(server.app)
+        client2 = server.socketio.test_client(server.app)
+        client1.connect('/canvas')
+        client2.connect('/canvas')
+        room_data1 = {'room_id': 'room1'}
+        room_data2 = {'room_id': 'room2'}
+        client1.emit('join', room_data1, namespace='/canvas')
+        client2.emit('join', room_data2, namespace='/canvas')
         diffs = {'diffs': [{'coord': 0, 'val': 100}]}
-        room_data = {'room_id': 'myTestRoom'}
 
-        client.emit('send-stroke', diffs, room_data, namespace='/canvas')
+        client1.emit('send-stroke', diffs, room_data1, namespace='/canvas')
 
-
-        self.assertEqual(server.server.boards.data[0], 100)
+        board1 = server.server.boards[room_data1['room_id']].data
+        board2 = server.server.boards[room_data2['room_id']].data
+        self.assertTrue(board1[0] == 100, board2[0] == 0)
 
     def test_boardcastsDiffs(self):
+        room_data = {'room_id': 'room1'}
         client1 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
+        client1.emit('join', room_data, namespace='/canvas')
         client2 = server.socketio.test_client(server.app)
         client2.connect('/canvas')
+        client2.emit('join', room_data, namespace='/canvas')
         stroke = {'diffs': [{'coord': 0, 'val': 100}]}
 
-        client1.emit('send-stroke', stroke, namespace='/canvas')
+        client1.emit('send-stroke', stroke, room_data, namespace='/canvas')
 
         received = client2.get_received('/canvas')
         self.assertIn({
