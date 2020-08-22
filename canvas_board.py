@@ -1,6 +1,14 @@
 import threading
 import copy
 
+HEIGHT = 500
+WIDTH = 500
+imagedata = {
+    'width': WIDTH,
+    'height': HEIGHT,
+    'data': [0 for i in range(4 * WIDTH * HEIGHT)]
+}
+
 class CanvasBoard:
     """Represents the image data of the canvas board.
 
@@ -15,12 +23,10 @@ class CanvasBoard:
     BLUE = 2
     ALPHA = 3
 
-    def __init__(self, imagedata):
-        """Parses a JSON of ImageData."""
-
-        self.width = copy.deepcopy(imagedata['width'])
-        self.height = copy.deepcopy(imagedata['height'])
-        self.data = copy.deepcopy(imagedata['data'])
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.data = [0 for i in range(4 * width * height)]
         self.lock = threading.Lock()
 
         if len(self.data) != self.width * self.height * 4:
@@ -44,10 +50,14 @@ class CanvasBoard:
             self.data[diff['coord']] = diff['val']
         self.lock.release()
 
-    def toDict(self):
+    def to_dict(self):
         boardDict = {
-            'width': self.width,
-            'height': self.height,
-            'data': self.data
+            'width': copy.deepcopy(self.width),
+            'height': copy.deepcopy(self.height),
+            'data': copy.deepcopy(self.data)
         }
         return boardDict
+
+    @staticmethod
+    def create_board(width, height):
+        return CanvasBoard(width, height)
