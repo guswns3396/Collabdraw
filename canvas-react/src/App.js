@@ -1,4 +1,3 @@
-import React, { useRef } from 'react';
 import './App.css';
 import Canvas from './Canvas';
 

@@ -50,7 +50,7 @@ function getCurrentBoard(canvas) {
   return getContext(canvas).getImageData(0, 0, canvas.width, canvas.height);
 }
 
-function draw(e, isPainting, canvas) {
+function draw(e, canvas) {
   const ctx = getContext(canvas);
 
 	ctx.lineWidth = 10;
