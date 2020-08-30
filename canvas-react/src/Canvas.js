@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 
 function Canvas() {
-  const [isPainting, setIsPainting] = useState(false);
-  const [boardSnapshot, setBoardSnapshot] = useState(null);
+  const isPainting = useRef(false);
+  const boardSnapshot = useRef(null);
   const canvasRef = useRef(null);
  
   return (
@@ -12,7 +12,7 @@ function Canvas() {
       height={window.innerHeight}
       onMouseUp={
         e => {
-          setIsPainting(false);
+          isPainting.current = false;
           
           const canvas = canvasRef.current;
           const ctx = getContext(canvas);
@@ -26,14 +26,14 @@ function Canvas() {
       onMouseDown={
         e => {
           const canvas = canvasRef.current;
-          setBoardSnapshot(getCurrentBoard(canvas));
-          setIsPainting(true);
+          boardSnapshot.current = getCurrentBoard(canvas);
+          isPainting.current = true;
           draw(e, canvas);
         }
       }
       onMouseMove={
         e => {
-          if (isPainting) {
+          if (isPainting.current) {
             draw(e, canvasRef.current);
           }
         }
