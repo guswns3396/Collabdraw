@@ -3,11 +3,6 @@ import copy
 
 HEIGHT = 500
 WIDTH = 500
-imagedata = {
-    'width': WIDTH,
-    'height': HEIGHT,
-    'data': [0 for i in range(4 * WIDTH * HEIGHT)]
-}
 
 class CanvasBoard:
     """Represents the image data of the canvas board.

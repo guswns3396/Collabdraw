@@ -4,7 +4,6 @@ from canvas_board import CanvasBoard, WIDTH, HEIGHT
 
 # constants
 PORT = 8080
-ID_LENGTH = 7
 
 # create Flask object
 app = Flask(__name__)
@@ -20,13 +19,20 @@ class Server:
         return self.__boards.keys()
 
     def add_board(self, room_id, board):
-        self.__boards[room_id] = board
+        if room_id in self.__boards:
+            assert ValueError('Room with given ID already exists')
+        else:
+            self.__boards[room_id] = board
 
     def get_board(self, room_id):
         return self.__boards[room_id]
 
     def update_board(self, diffs: list, room_id: str):
-        self.__boards[room_id].update_board(diffs)
+        if room_id not in self.__boards:
+            assert ValueError('Room with given ID does not exist')
+        else:
+            self.__boards[room_id].update_board(diffs)
+
 server = Server()
 
 @app.route('/')
@@ -60,12 +66,13 @@ def handle_send_stroke(payload):
         emit('broadcast-stroke', payload['diffs'], room=room_id)
     else:
         print("Error: no room found")
+        abort(Response('Room with given ID does not exist'))
 
 @socketio.on('join', namespace='/canvas')
 def on_join(payload):
     room_id = payload['room_id']
     if room_id not in server.get_ids():
-        abort(Response('Room with given ID does not exists'))
+        abort(Response('Room with given ID does not exist'))
     join_room(room_id)
     print('A client has joined the room', room_id)
     emit('initialize-board', {'board': server.get_board(room_id).to_dict()})
