@@ -1,4 +1,8 @@
-from json import JSONEncoder
+import threading
+import copy
+
+HEIGHT = 500
+WIDTH = 500
 
 class CanvasBoard:
     """Represents the image data of the canvas board.
@@ -14,12 +18,11 @@ class CanvasBoard:
     BLUE = 2
     ALPHA = 3
 
-    def __init__(self, imagedata):
-        """Parses a JSON of ImageData."""
-
-        self.width = imagedata['width']
-        self.height = imagedata['height']
-        self.data = imagedata['data']
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.data = [0 for i in range(4 * width * height)]
+        self.lock = threading.Lock()
 
         if len(self.data) != self.width * self.height * 4:
             raise ValueError(
@@ -37,9 +40,19 @@ class CanvasBoard:
         return tuple(self.data[start_ind:start_ind + 4])
 
     def update_board(self, diffs: list):
+        self.lock.acquire()
         for diff in diffs:
             self.data[diff['coord']] = diff['val']
+        self.lock.release()
 
-class CanvasBoardEncoder(JSONEncoder):
-    def default(self, o):
-        return o.__dict__
+    def to_dict(self):
+        boardDict = {
+            'width': copy.deepcopy(self.width),
+            'height': copy.deepcopy(self.height),
+            'data': copy.deepcopy(self.data)
+        }
+        return boardDict
+
+    @staticmethod
+    def create_board(width, height):
+        return CanvasBoard(width, height)

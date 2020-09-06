@@ -1,12 +1,9 @@
-import threading
-from flask import Flask
-from flask_socketio import SocketIO, emit
-from canvas_board import CanvasBoard, CanvasBoardEncoder
+from flask import Flask, jsonify, abort, Response
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from canvas_board import CanvasBoard, WIDTH, HEIGHT
 
 # constants
 PORT = 8080
-HEIGHT = 500
-WIDTH = 500
 
 # create Flask object
 app = Flask(__name__)
@@ -15,44 +12,70 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 
 # server class
 class Server:
-    def __init__(self, imagedata):
-        self.board = CanvasBoard(imagedata)
-        self.lock = threading.Lock()
+    def __init__(self):
+        self.__boards = {}
 
-    def update_board(self, diffs: list):
-        self.lock.acquire()
-        self.board.update_board(diffs)
-        self.lock.release()
+    def get_rooms(self):
+        return self.__boards.keys()
 
+    def add_board(self, room_id, board):
+        if room_id in self.get_rooms():
+            raise ValueError('Room with given ID already exists')
+        else:
+            self.__boards[room_id] = board
 
-# instantiate server class for board state
-imagedata = {
-    'width': WIDTH,
-    'height': HEIGHT,
-    'data': [0 for i in range(4 * WIDTH * HEIGHT)]
-}
-server = Server(imagedata)
+    def get_board(self, room_id):
+        if room_id in self.get_rooms():
+            return self.__boards[room_id]
+        else:
+            raise ValueError('Room with given ID does not exist')
 
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
+    def update_board(self, diffs: list, room_id: str):
+        if room_id not in self.get_rooms():
+            raise ValueError('Room with given ID does not exist')
+        else:
+            self.__boards[room_id].update_board(diffs)
+
+server = Server()
+
+@app.route('/create/<room_id>')
+def create_room(room_id):
+    try:
+        server.add_board(room_id, CanvasBoard.create_board(WIDTH, HEIGHT))
+    except:
+        abort(Response('Room with given ID already exists', status=400))
+    response = jsonify(room_id=room_id)
+    # just return response with room id
+    # don't worry about frontend
+    return response
 
 @socketio.on('connect', namespace='/canvas')
 def connect_canvas():
-    # broadcast board upon initial connect at /canvas endpoint
-    # turn board into JSON
-    board = CanvasBoardEncoder().encode(server.board)
-    emit('initialize-board', board)
+    print("connected to websocket")
 
 @socketio.on('disconnect')
 def on_disconnect():
     print("disconnected from websocket")
 
 @socketio.on('send-stroke', namespace="/canvas")
-def handle_send_stroke(stroke):
-    server.update_board(stroke['diffs'])
-    # broadcast the new change
-    emit('broadcast-stroke', stroke, broadcast=True)
+def handle_send_stroke(payload):
+    room_id = payload['room_id']
+    try:
+        server.update_board(payload['diffs'], room_id)
+    except:
+        print("Error: no room found")
+        emit('invalid-room', 'Room with given ID not found')
+    else:
+        emit('broadcast-stroke', payload['diffs'], room=room_id)
+
+@socketio.on('join', namespace='/canvas')
+def on_join(payload):
+    room_id = payload['room_id']
+    if room_id not in server.get_rooms():
+        emit('invalid-room', 'Room with given ID not found')
+    join_room(room_id)
+    print('A client has joined the room', room_id)
+    emit('initialize-board', {'board': server.get_board(room_id).to_dict()})
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
