@@ -15,21 +15,24 @@ class Server:
     def __init__(self):
         self.__boards = {}
 
-    def get_ids(self):
+    def get_rooms(self):
         return self.__boards.keys()
 
     def add_board(self, room_id, board):
-        if room_id in self.__boards:
-            assert ValueError('Room with given ID already exists')
+        if room_id in self.get_rooms():
+            raise ValueError('Room with given ID already exists')
         else:
             self.__boards[room_id] = board
 
     def get_board(self, room_id):
-        return self.__boards[room_id]
+        if room_id in self.get_rooms():
+            return self.__boards[room_id]
+        else:
+            raise ValueError('Room with given ID does not exist')
 
     def update_board(self, diffs: list, room_id: str):
-        if room_id not in self.__boards:
-            assert ValueError('Room with given ID does not exist')
+        if room_id not in self.get_rooms():
+            raise ValueError('Room with given ID does not exist')
         else:
             self.__boards[room_id].update_board(diffs)
 
@@ -41,9 +44,10 @@ def index():
 
 @app.route('/create/<room_id>')
 def create_room(room_id):
-    if room_id in server.get_ids():
+    try:
+        server.add_board(room_id, CanvasBoard.create_board(WIDTH, HEIGHT))
+    except:
         abort(Response('Room with given ID already exists', status=400))
-    server.add_board(room_id, CanvasBoard.create_board(WIDTH, HEIGHT))
     response = jsonify(room_id=room_id)
     # just return response with room id
     # don't worry about frontend
@@ -60,17 +64,18 @@ def on_disconnect():
 @socketio.on('send-stroke', namespace="/canvas")
 def handle_send_stroke(payload):
     room_id = payload['room_id']
-    if room_id in server.get_ids():
+    try:
         server.update_board(payload['diffs'], room_id)
-        emit('broadcast-stroke', payload['diffs'], room=room_id)
-    else:
+    except:
         print("Error: no room found")
         emit('invalid-room', 'Room with given ID not found')
+    else:
+        emit('broadcast-stroke', payload['diffs'], room=room_id)
 
 @socketio.on('join', namespace='/canvas')
 def on_join(payload):
     room_id = payload['room_id']
-    if room_id not in server.get_ids():
+    if room_id not in server.get_rooms():
         emit('invalid-room', 'Room with given ID not found')
     join_room(room_id)
     print('A client has joined the room', room_id)
