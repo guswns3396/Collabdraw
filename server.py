@@ -38,10 +38,6 @@ class Server:
 
 server = Server()
 
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
-
 @app.route('/create/<room_id>')
 def create_room(room_id):
     try:
