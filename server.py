@@ -65,13 +65,13 @@ def handle_send_stroke(payload):
         emit('broadcast-stroke', payload['diffs'], room=room_id)
     else:
         print("Error: no room found")
-        abort(Response('Room with given ID does not exist', status=400))
+        emit('invalid-room', 'Room with given ID not found')
 
 @socketio.on('join', namespace='/canvas')
 def on_join(payload):
     room_id = payload['room_id']
     if room_id not in server.get_ids():
-        abort(Response('Room with given ID does not exist', status=400))
+        emit('invalid-room', 'Room with given ID not found')
     join_room(room_id)
     print('A client has joined the room', room_id)
     emit('initialize-board', {'board': server.get_board(room_id).to_dict()})

@@ -75,9 +75,14 @@ class TestSendStroke(unittest.TestCase):
         client.connect('/canvas')
         payload = {'diffs': {}, 'room_id': 'test'}
 
-        response = client.emit('send-stroke', payload, namespace='/canvas')
+        client.emit('send-stroke', payload, namespace='/canvas')
 
-        self.assertEqual(400, response.status_code)
+        received = client.get_received('/canvas')
+        self.assertIn({
+            'name': 'invalid-room',
+            'args': ['Room with given ID not found'],
+            'namespace': '/canvas'
+        }, received)
 
     def test_updatesBoardStateByRoom(self):
         server.server.add_board('room1', server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
