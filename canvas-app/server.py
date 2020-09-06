@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, abort, Response
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_socketio import SocketIO, emit, join_room, leave_room, close_room
 from canvas_board import CanvasBoard, WIDTH, HEIGHT
 
 # constants
@@ -13,6 +13,7 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 # server class
 class Server:
     def __init__(self):
+        # TODO(guswns3396): implement Room class; replace boards with rooms
         self.__boards = {}
 
     def get_rooms(self):
@@ -77,6 +78,17 @@ def on_join(payload):
     join_room(room_id)
     print('A client has joined the room', room_id)
     emit('initialize-board', {'board': server.get_board(room_id).to_dict()})
+
+@socketio.on('leave', namespace='canvas')
+def on_leave(payload):
+    room_id = payload['room_id']
+    if room_id not in server.get_rooms():
+        emit('invalid-room', 'Room with given ID not found')
+    leave_room(room_id)
+    print('A client has left the room', room_id)
+    # TODO(guswns3396): check number of users, purge when last one leaves
+    if ...:
+        close_room(room_id)
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
