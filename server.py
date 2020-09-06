@@ -39,13 +39,12 @@ server = Server()
 def index():
     return app.send_static_file('index.html')
 
-@app.route('/create')
-def create_room(payload):
-    room = payload['room_id']
-    if room in server.get_ids():
-        abort(Response('Room with given ID already exists'))
-    server.add_board(room, CanvasBoard.create_board(WIDTH, HEIGHT))
-    response = jsonify(room_id=room)
+@app.route('/create/<room_id>')
+def create_room(room_id):
+    if room_id in server.get_ids():
+        abort(Response('Room with given ID already exists', status=400))
+    server.add_board(room_id, CanvasBoard.create_board(WIDTH, HEIGHT))
+    response = jsonify(room_id=room_id)
     # just return response with room id
     # don't worry about frontend
     return response
@@ -66,13 +65,13 @@ def handle_send_stroke(payload):
         emit('broadcast-stroke', payload['diffs'], room=room_id)
     else:
         print("Error: no room found")
-        abort(Response('Room with given ID does not exist'))
+        abort(Response('Room with given ID does not exist', status=400))
 
 @socketio.on('join', namespace='/canvas')
 def on_join(payload):
     room_id = payload['room_id']
     if room_id not in server.get_ids():
-        abort(Response('Room with given ID does not exist'))
+        abort(Response('Room with given ID does not exist', status=400))
     join_room(room_id)
     print('A client has joined the room', room_id)
     emit('initialize-board', {'board': server.get_board(room_id).to_dict()})

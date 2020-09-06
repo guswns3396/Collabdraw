@@ -26,9 +26,10 @@ class TestSocketIOConnection(unittest.TestCase):
 
 class TestOnJoin(unittest.TestCase):
     def test_initializesBoardForNewClient(self):
+        server.server.add_board('testid', server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
         client1 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
-        room_data = {'room_id': 'myTestRoom'}
+        room_data = {'room_id': 'testid'}
         client1.emit('join', room_data, namespace='/canvas')
         stroke = {'diffs': [{'coord': 0, 'val': 100}]}
         server.server.update_board(stroke['diffs'], room_data['room_id'])
@@ -41,10 +42,12 @@ class TestOnJoin(unittest.TestCase):
         board = None
         for data in received_data:
             if data['name'] == 'initialize-board':
-                board = json.loads(data['args'][0])['data']
+                board = data['args'][0]['board']['data']
         self.assertEqual(100, board[0])
 
     def test_keepsBoardsSeparateForEachRoom(self):
+        server.server.add_board('room1', server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
+        server.server.add_board('room2', server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
         client1 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
         room_data1 = {'room_id': 'room1'}
@@ -57,29 +60,28 @@ class TestOnJoin(unittest.TestCase):
 
         client2.emit('join', room_data2, namespace='/canvas')
 
-        board1 = server.server.boards[room_data1['room_id']].data
+        board1 = server.server.get_board(room_data1['room_id']).data
         board2 = None
         received_data = client2.get_received('/canvas')
         for data in received_data:
             if data['name'] == 'initialize-board':
-                board2 = json.loads(data['args'][0])['data']
+                board2 = data['args'][0]['board']['data']
         self.assertNotEqual(board1[0], board2[0])
 
 class TestSendStroke(unittest.TestCase):
-    def test_printsErrorMessageIfNoRoomFound(self):
+    def test_errorIfNoRoomFound(self):
+        server.server.add_board('testroom', server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
         client = server.socketio.test_client(server.app)
         client.connect('/canvas')
-        stroke = {}
-        room_data = {'room_id': 'test'}
+        payload = {'diffs': {}, 'room_id': 'test'}
 
-        with patch('sys.stdout', new=io.StringIO()) as myOutput:
-            client.emit('send-stroke', stroke, room_data, namespace='/canvas')
-            output = myOutput.getvalue()
+        response = client.emit('send-stroke', payload, namespace='/canvas')
 
-        expected = "Error: no room found\n"
-        self.assertEqual(expected, output)
+        self.assertEqual(400, response.status_code)
 
     def test_updatesBoardStateByRoom(self):
+        server.server.add_board('room1', server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
+        server.server.add_board('room2', server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
         client1 = server.socketio.test_client(server.app)
         client2 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
@@ -88,15 +90,16 @@ class TestSendStroke(unittest.TestCase):
         room_data2 = {'room_id': 'room2'}
         client1.emit('join', room_data1, namespace='/canvas')
         client2.emit('join', room_data2, namespace='/canvas')
-        diffs = {'diffs': [{'coord': 0, 'val': 100}]}
+        payload = {'diffs': [{'coord': 0, 'val': 100}], 'room_id': 'room1'}
 
-        client1.emit('send-stroke', diffs, room_data1, namespace='/canvas')
+        client1.emit('send-stroke', payload, namespace='/canvas')
 
-        board1 = server.server.boards[room_data1['room_id']].data
-        board2 = server.server.boards[room_data2['room_id']].data
+        board1 = server.server.get_board(room_data1['room_id']).data
+        board2 = server.server.get_board(room_data2['room_id']).data
         self.assertTrue(board1[0] == 100, board2[0] == 0)
 
     def test_boardcastsDiffs(self):
+        server.server.add_board('room1', server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
         room_data = {'room_id': 'room1'}
         client1 = server.socketio.test_client(server.app)
         client1.connect('/canvas')
@@ -104,14 +107,14 @@ class TestSendStroke(unittest.TestCase):
         client2 = server.socketio.test_client(server.app)
         client2.connect('/canvas')
         client2.emit('join', room_data, namespace='/canvas')
-        stroke = {'diffs': [{'coord': 0, 'val': 100}]}
+        payload = {'diffs': [{'coord': 0, 'val': 100}], 'room_id': 'room1'}
 
-        client1.emit('send-stroke', stroke, room_data, namespace='/canvas')
+        client1.emit('send-stroke', payload, namespace='/canvas')
 
         received = client2.get_received('/canvas')
         self.assertIn({
             'name': 'broadcast-stroke',
-            'args': [stroke],
+            'args': [payload['diffs']],
             'namespace': '/canvas'
         }, received)
 
@@ -120,28 +123,21 @@ class TestCreate(unittest.TestCase):
         server.app.testing = True
         client = server.app.test_client()
 
-        response = client.get('/create')
+        response = client.get('/create/testID')
 
         room_data = response.get_json()
         id = room_data['room_id']
-        self.assertTrue(id is not None)
+        self.assertTrue(id == 'testID')
 
-    def test_skipsDuplicate(self):
+    def test_errorIfDuplicate(self):
         server.app.testing = True
         client1 = server.app.test_client()
         client2 = server.app.test_client()
-        server.random.seed(0)
-        response1 = client1.get('/create')
-        room_data1 = response1.get_json()
-        id1 = room_data1['room_id']
-        server.server.boards[id1] = None
-        server.random.seed(0)
+        client1.get('/create/test1')
 
-        response2 = client2.get('/create')
+        response2 = client2.get('/create/test1')
 
-        room_data2 = response2.get_json()
-        id2 = room_data2['room_id']
-        self.assertNotEqual(id1, id2)
+        self.assertEqual(400, response2.status_code)
 
 if __name__ == '__main__':
     unittest.main()
