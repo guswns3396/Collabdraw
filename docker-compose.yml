@@ -1,7 +1,11 @@
 version: '3'
 services:
   app:
-    build: app/.
+    build: canvas-app/.
     ports:
       - "8080:8080"
- 
+  web:
+    tty: true
+    build: canvas-react/.
+    ports:
+      - "3000:3000"
