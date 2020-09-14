@@ -15,35 +15,35 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 class Server:
     def __init__(self):
         # TODO(guswns3396): implement Room class; replace boards with rooms
-        self.__boards = {}
+        self.__rooms = {}
 
     def get_rooms(self):
-        return self.__boards.keys()
+        return self.__rooms.keys()
 
-    def add_board(self, room_id, board):
+    def add_room(self, room_id, room):
         if room_id in self.get_rooms():
             raise ValueError('Room with given ID already exists')
         else:
-            self.__boards[room_id] = board
+            self.__rooms[room_id] = room
 
-    def get_board(self, room_id):
+    def get_room(self, room_id):
         if room_id in self.get_rooms():
-            return self.__boards[room_id]
+            return self.__rooms[room_id]
         else:
             raise ValueError('Room with given ID does not exist')
 
-    def update_board(self, diffs: list, room_id: str):
+    def update_room_board(self, diffs: list, room_id: str):
         if room_id not in self.get_rooms():
             raise ValueError('Room with given ID does not exist')
         else:
-            self.__boards[room_id].update_board(diffs)
+            self.__rooms[room_id].get_board().update_board(diffs)
 
 server = Server()
 
 @app.route('/create/<room_id>')
 def create_room(room_id):
     try:
-        server.add_board(room_id, CanvasBoard.create_board(WIDTH, HEIGHT))
+        server.add_room(room_id, CanvasBoard.create_board(WIDTH, HEIGHT))
     except:
         abort(Response('Room with given ID already exists', status=400))
     response = jsonify(room_id=room_id)
@@ -64,7 +64,7 @@ def on_disconnect():
 def handle_send_stroke(payload):
     room_id = payload['room_id']
     try:
-        server.update_board(payload['diffs'], room_id)
+        server.update_room_board(payload['diffs'], room_id)
     except:
         print("Error: no room found")
         emit('invalid-room', 'Room with given ID not found')
@@ -78,7 +78,7 @@ def on_join(payload):
         emit('invalid-room', 'Room with given ID not found')
     join_room(room_id)
     print('A client has joined the room', room_id)
-    emit('initialize-board', {'board': server.get_board(room_id).to_dict()})
+    emit('initialize-board', {'board': server.get_room(room_id).get_board().to_dict()})
 
 @socketio.on('leave', namespace='canvas')
 def on_leave(payload):
