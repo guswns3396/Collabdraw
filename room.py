@@ -1,11 +1,7 @@
 class Room:
-    def __init__(self, room_id, board):
-        self.__id = room_id
+    def __init__(self, board):
         self.__board = board
         self.__headcount = 0
-
-    def get_id(self):
-        return self.__id
 
     def get_board(self):
         return self.__board
@@ -18,3 +14,7 @@ class Room:
 
     def decrement(self):
         self.__headcount -= 1
+
+    @staticmethod
+    def create_room(board):
+        return Room(board)
