@@ -38,6 +38,12 @@ class Server:
         else:
             self.__rooms[room_id].get_board().update_board(diffs)
 
+    def delete_room(self, room_id):
+        if room_id in self.get_rooms():
+            del self.__rooms[room_id]
+        else:
+            raise ValueError('Room with given ID does not exist')
+
 server = Server()
 
 @app.route('/create/<room_id>')
@@ -77,6 +83,7 @@ def on_join(payload):
     if room_id not in server.get_rooms():
         emit('invalid-room', 'Room with given ID not found')
     join_room(room_id)
+    server.get_room(room_id).decrement()
     print('A client has joined the room', room_id)
     emit('initialize-board', {'board': server.get_room(room_id).get_board().to_dict()})
 
@@ -86,10 +93,12 @@ def on_leave(payload):
     if room_id not in server.get_rooms():
         emit('invalid-room', 'Room with given ID not found')
     leave_room(room_id)
+    server.get_room(room_id).decrement()
     print('A client has left the room', room_id)
     # TODO(guswns3396): check number of users, purge when last one leaves
-    if ...:
+    if server.get_room(room_id).get_headcount() == 0:
         close_room(room_id)
+        server.delete_room(room_id)
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
