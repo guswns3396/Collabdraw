@@ -45,6 +45,7 @@ def create_room(room_id):
     except:
         abort(Response('Room with given ID already exists', status=400))
     response = jsonify(room_id=room_id)
+    response.headers.add('Access-Control-Allow-Origin', '*')
     # just return response with room id
     # don't worry about frontend
     return response
@@ -66,7 +67,7 @@ def handle_send_stroke(payload):
         print("Error: no room found")
         emit('invalid-room', 'Room with given ID not found')
     else:
-        emit('broadcast-stroke', payload['diffs'], room=room_id)
+        emit('broadcast-stroke', {'diffs': payload['diffs']}, room=room_id)
 
 @socketio.on('join', namespace='/canvas')
 def on_join(payload):
