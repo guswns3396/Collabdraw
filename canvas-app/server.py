@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, abort, Response
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room
 from canvas_board import CanvasBoard, WIDTH, HEIGHT
+from room import Room
 
 # constants
 PORT = 8080
