@@ -1,9 +1,12 @@
 import React, { useRef, useState, useLayoutEffect } from 'react';
-import socketIOClient from "socket.io-client";
+import { useParams } from 'react-router-dom';
+import socketIOClient from 'socket.io-client';
 
 const socket = socketIOClient("http://127.0.0.1:8080/canvas");
 
 function Canvas() {
+  const { roomId } = useParams();
+
   const isPainting = useRef(false);
   const boardSnapshot = useRef(null);
   const canvasRef = useRef(null);
@@ -12,8 +15,14 @@ function Canvas() {
   const [canvasHeight, setCanvasHeight] = useState(100);
 
   useLayoutEffect(() => {
-    socket.on("initialize-board", board => {
-      const initialBoard = JSON.parse(board);
+    socket.emit("join", { room_id: roomId });
+
+    socket.on("invalid-room", msg => {
+      throw new Error(msg);
+    });
+
+    socket.on("initialize-board", payload => {
+      const initialBoard = payload["board"];
       const initialImagedata = new ImageData(
         new Uint8ClampedArray(initialBoard.data),
         initialBoard.width,
@@ -25,8 +34,8 @@ function Canvas() {
       getContext(canvasRef.current).putImageData(initialImagedata, 0, 0);
     });
 
-    socket.on("broadcast-stroke", stroke => {
-      updateBoard(canvasRef.current, stroke.diffs);
+    socket.on("broadcast-stroke", payload => {
+      updateBoard(canvasRef.current, payload["diffs"]);
     });
   });
 
@@ -46,7 +55,10 @@ function Canvas() {
           ctx.beginPath();
           const boardAfter = getCurrentBoard(canvas);
           console.log(boardAfter);
-          socket.emit("send-stroke", { diffs: getDiffs(boardSnapshot.current, boardAfter) });
+          socket.emit("send-stroke", {
+            diffs: getDiffs(boardSnapshot.current, boardAfter),
+            room_id: roomId
+          });
         }
       }
       onMouseDown={
