@@ -21,6 +21,7 @@ class Server:
         return self.__rooms.keys()
 
     def add_room(self, room_id, room):
+        print(self.get_rooms())
         if room_id in self.get_rooms():
             raise ValueError('Room with given ID already exists')
         else:
@@ -49,7 +50,7 @@ server = Server()
 @app.route('/create/<room_id>')
 def create_room(room_id):
     try:
-        server.add_room(room_id, CanvasBoard.create_board(WIDTH, HEIGHT))
+        server.add_room(room_id, Room.create_room(CanvasBoard.create_board(WIDTH, HEIGHT)))
     except:
         abort(Response('Room with given ID already exists', status=400))
     response = jsonify(room_id=room_id)
