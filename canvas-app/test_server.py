@@ -5,6 +5,11 @@ import server
 import json
 
 class TestSocketIOConnection(unittest.TestCase):
+    def setUp(self):
+        rooms = list(server.server.get_rooms())
+        for room in rooms:
+            server.server.delete_room(room)
+
     def test_printsDisconnectionMessage(self):
         client = server.socketio.test_client(server.app)
         expectedOutput = "disconnected from websocket\n"
@@ -25,6 +30,11 @@ class TestSocketIOConnection(unittest.TestCase):
         self.assertEqual(expectedOutput, output)
 
 class TestOnJoin(unittest.TestCase):
+    def setUp(self):
+        rooms = list(server.server.get_rooms())
+        for room in rooms:
+            server.server.delete_room(room)
+
     def test_initializesBoardForNewClient(self):
         room = server.Room.create_room(server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
         server.server.add_room('testid', room)
@@ -72,6 +82,10 @@ class TestOnJoin(unittest.TestCase):
         self.assertNotEqual(board1[0], board2[0])
 
 class TestSendStroke(unittest.TestCase):
+    def setUp(self):
+        rooms = list(server.server.get_rooms())
+        for room in rooms:
+            server.server.delete_room(room)
 
     def test_errorIfNoRoomFound(self):
         room = server.Room.create_room(server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
@@ -134,6 +148,11 @@ class TestSendStroke(unittest.TestCase):
         }, received)
 
 class TestCreate(unittest.TestCase):
+    def setUp(self):
+        rooms = list(server.server.get_rooms())
+        for room in rooms:
+            server.server.delete_room(room)
+
     def test_createsID(self):
         server.app.testing = True
         client = server.app.test_client()
@@ -155,7 +174,58 @@ class TestCreate(unittest.TestCase):
         self.assertEqual(400, response2.status_code)
 
 class TestOnLeave(unittest.TestCase):
-    pass
+    def setUp(self):
+        rooms = list(server.server.get_rooms())
+        for room in rooms:
+            server.server.delete_room(room)
+
+    def test_invalidRoom(self):
+        client = server.socketio.test_client(server.app)
+        client.connect('/canvas')
+        payload = {'room_id': 'test'}
+
+        client.emit('leave', payload, namespace='/canvas')
+
+        received = client.get_received('/canvas')
+        self.assertIn({
+            'name': 'invalid-room',
+            'args': ['Room with given ID not found'],
+            'namespace': '/canvas'
+        }, received)
+
+    def test_noUpdateFromRoom(self):
+        room1 = server.Room.create_room(server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
+        server.server.add_room('room1', room1)
+        room_data = {'room_id': 'room1'}
+        client1 = server.socketio.test_client(server.app)
+        client1.connect('/canvas')
+        client1.emit('join', room_data, namespace='/canvas')
+        client2 = server.socketio.test_client(server.app)
+        client2.connect('/canvas')
+        client2.emit('join', room_data, namespace='/canvas')
+
+        client1.emit('leave', room_data, namespace='/canvas')
+
+        payload = {'diffs': [{'coord': 0, 'val': 100}], 'room_id': 'room1'}
+        client2.emit('send-stroke', payload, namespace='/canvas')
+        event = {
+            'name': 'broadcast-stroke',
+            'args': [{'diffs': payload['diffs']}],
+            'namespace': '/canvas'
+        }
+        self.assertTrue(event not in client1.get_received('/canvas') and event in client2.get_received('/canvas'))
+
+    def test_purgeRoomFromServer(self):
+        room = server.Room.create_room(server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
+        server.server.add_room('room', room)
+        room_data = {'room_id': 'room'}
+        client = server.socketio.test_client(server.app)
+        client.connect('/canvas')
+        client.emit('join', room_data, namespace='/canvas')
+
+        client.emit('leave', room_data, namespace='/canvas')
+
+        self.assertTrue('room' not in server.server.get_rooms())
 
 if __name__ == '__main__':
     unittest.main()

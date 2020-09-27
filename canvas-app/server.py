@@ -14,14 +14,12 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 # server class
 class Server:
     def __init__(self):
-        # TODO(guswns3396): implement Room class; replace boards with rooms
         self.__rooms = {}
 
     def get_rooms(self):
         return self.__rooms.keys()
 
     def add_room(self, room_id, room):
-        print(self.get_rooms())
         if room_id in self.get_rooms():
             raise ValueError('Room with given ID already exists')
         else:
@@ -84,22 +82,22 @@ def on_join(payload):
     if room_id not in server.get_rooms():
         emit('invalid-room', 'Room with given ID not found')
     join_room(room_id)
-    server.get_room(room_id).decrement()
+    server.get_room(room_id).increment()
     print('A client has joined the room', room_id)
     emit('initialize-board', {'board': server.get_room(room_id).get_board().to_dict()})
 
-@socketio.on('leave', namespace='canvas')
+@socketio.on('leave', namespace='/canvas')
 def on_leave(payload):
     room_id = payload['room_id']
     if room_id not in server.get_rooms():
         emit('invalid-room', 'Room with given ID not found')
-    leave_room(room_id)
-    server.get_room(room_id).decrement()
-    print('A client has left the room', room_id)
-    # TODO(guswns3396): check number of users, purge when last one leaves
-    if server.get_room(room_id).get_headcount() == 0:
-        close_room(room_id)
-        server.delete_room(room_id)
+    else:
+        leave_room(room_id)
+        server.get_room(room_id).decrement()
+        print('A client has left the room', room_id)
+        if server.get_room(room_id).get_headcount() == 0:
+            close_room(room_id)
+            server.delete_room(room_id)
 
 if __name__ == "__main__":
     # TODO(hyunbumy): Modify the host to restrict the access from the frontend
