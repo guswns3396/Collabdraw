@@ -72,12 +72,6 @@ class TestOnJoin(unittest.TestCase):
         self.assertNotEqual(board1[0], board2[0])
 
 class TestSendStroke(unittest.TestCase):
-    def tearDown(self):
-        ids = []
-        for room in server.server.get_rooms():
-            ids.append(room)
-        for room in ids:
-            server.server.delete_room(room)
 
     def test_errorIfNoRoomFound(self):
         room = server.Room.create_room(server.CanvasBoard.create_board(server.WIDTH, server.HEIGHT))
